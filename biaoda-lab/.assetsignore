@@ -1,0 +1,8 @@
+# Cloudflare Pages 资源上传排除（语法同 .gitignore）
+.tools
+.wrangler
+.dev.vars
+.env
+.env.local
+.vercel
+node_modules

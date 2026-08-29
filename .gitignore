@@ -1,0 +1,5 @@
+# 工具目录（wrangler 本地安装，不入库）
+.tools/
+
+# 系统杂项
+Thumbs.db
