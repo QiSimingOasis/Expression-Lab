@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>练习结果 - 表达研究所</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="page page--result">
+    <header class="page-header page-header--with-right">
+      <a href="index.html" class="back-link">← 返回</a>
+      <h1 class="page-title">练习结果</h1>
+      <a href="profile.html" class="header-profile-link">我的</a>
+    </header>
+
+    <!-- 空状态 -->
+    <section id="result-empty" class="result-empty" hidden>
+      <p class="placeholder-text">暂无练习结果，请先完成一次练习。</p>
+      <a href="index.html" class="btn btn--primary">去练习</a>
+    </section>
+
+    <!-- 主体：信息卡片 -->
+    <section id="result-content" class="result-content">
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-label">练习模式</span>
+          <span class="info-value" id="info-mode">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">练习日期</span>
+          <span class="info-value" id="info-date">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">录音时长</span>
+          <span class="info-value" id="info-duration">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 底部 Drawer（默认不隐藏，内容可见） -->
+    <div class="drawer" id="result-drawer">
+      <!-- 可点击/上滑的把手区域 -->
+      <div class="drawer-handle" id="drawer-handle">
+        <span class="drawer-grip"></span>
+      </div>
+
+      <!-- 折叠状态可见内容 -->
+      <div class="drawer-collapsed-content">
+        <div class="radar-wrap">
+          <canvas id="radar-chart"></canvas>
+        </div>
+        <p class="drawer-summary summary-text" id="summary-text">本次表达分析已完成。</p>
+      </div>
+
+      <button type="button" class="drawer-toggle-hint drawer-up-hint" id="drawer-up-hint">查看详细分析 ↑</button>
+
+      <!-- 展开后可见内容 -->
+      <div class="drawer-expanded-content">
+        <div class="dimensions dimensions-wrap" id="dimensions-wrap"></div>
+        <div class="suggestions-block" id="suggestions-block">
+          <h3 class="suggestions-title">💡 这样说会更好</h3>
+          <ul class="suggestions-list" id="suggestions-list"></ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () { App.initResultPage(); });
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "functions": {
+    "api/transcribe.js": {
+      "maxDuration": 60,
+      "memory": 512,
+      "includeFiles": "api/**"
+    },
+    "api/analyze.js": {
+      "maxDuration": 30,
+      "memory": 256,
+      "includeFiles": "api/**"
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)",   "dest": "/$1" }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
+}

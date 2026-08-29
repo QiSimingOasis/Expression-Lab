@@ -1,0 +1,19 @@
+{
+  "name": "biaoda-lab",
+  "version": "1.0.0",
+  "description": "表达研究所 - 中文口语表达训练与 AI 评分工具",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vercel dev --listen 3001",
+    "deploy": "vercel deploy",
+    "deploy:prod": "vercel deploy --prod",
+    "test": "node test/verify-frontend-v3.js",
+    "test:api": "node test/api-test.js"
+  },
+  "dependencies": {
+    "crypto": "*"
+  }
+}

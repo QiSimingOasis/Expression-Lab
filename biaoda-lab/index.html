@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>表达研究所</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="page page--home">
+  <header class="home-topbar">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">表</div>
+      <span class="brand-name">表达研究所</span>
+    </div>
+    <button type="button" id="profile-entry" class="avatar-entry" aria-label="进入个人中心" title="个人中心">
+      <span class="avatar-initial">我</span>
+    </button>
+  </header>
+
+  <main class="home-main">
+    <!-- 打卡仪表盘：连击 + 累计 + 最近 7 天日历（JS 渲染） -->
+    <section class="home-dash" aria-label="练习打卡">
+      <div class="home-dash-chips">
+        <span class="dash-chip dash-chip--streak" id="dash-streak">🔥 连击 <b>0</b> 天</span>
+        <span class="dash-chip dash-chip--total" id="dash-total">💎 累计 <b>0</b> 次</span>
+      </div>
+      <div class="home-cal" id="dash-cal" aria-label="最近 7 天打卡日历"></div>
+    </section>
+
+    <h3 class="home-ask">今天练什么？</h3>
+    <p class="home-ask-sub">完成任意 1 次练习 = 今日打卡 ✓</p>
+
+    <!-- 四色模式卡：点击直接进入对应场景 -->
+    <div class="home-mode-grid" id="home-mode-grid">
+      <button type="button" class="mode-card mode-card--A" data-scene="A">
+        <span class="mode-card-ic">💬</span>
+        <b class="mode-card-name">话题闲聊</b>
+        <span class="mode-card-desc">每日话题 · 轻松开口</span>
+      </button>
+      <button type="button" class="mode-card mode-card--B" data-scene="B">
+        <span class="mode-card-ic">🎙️</span>
+        <b class="mode-card-name">自言自语</b>
+        <span class="mode-card-desc">无人打扰 · 随心说</span>
+      </button>
+      <button type="button" class="mode-card mode-card--C" data-scene="C">
+        <span class="mode-card-ic">🎤</span>
+        <b class="mode-card-name">演讲练习</b>
+        <span class="mode-card-desc">命题 / 自由 · 1-5 分钟</span>
+      </button>
+      <button type="button" class="mode-card mode-card--D" data-scene="D">
+        <span class="mode-card-ic">💼</span>
+        <b class="mode-card-name">面试模拟</b>
+        <span class="mode-card-desc">随机 / JD 全流程</span>
+      </button>
+    </div>
+
+    <!-- 页脚提示 -->
+    <div class="home-hint">
+      <p>表达是一种可以练习的肌肉，每天开口 3 分钟也有效。</p>
+    </div>
+    <div class="home-footer-links">
+      <a class="link-muted" href="profile.html">我的记录 · 个人中心</a>
+    </div>
+  </main>
+
+  <script src="js/topics.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () { App.initHome(); });
+  </script>
+</body>
+</html>

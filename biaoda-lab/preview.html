@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>表达研究室 · 融合版对比（新拟物 × 多邻国打卡）</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #eceef1; min-height: 100vh; padding: 28px 16px 60px;
+  }
+  .ph { text-align: center; margin-bottom: 8px; }
+  .ph h1 { font-size: 20px; color: #2b2f36; }
+  .ph p { font-size: 13px; color: #8a919c; margin-top: 6px; }
+
+  .style-block { max-width: 900px; margin: 30px auto 0; }
+  .style-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 0 6px 10px; }
+  .style-head .idx { font-size: 12px; font-weight: 800; color: #fff; background: #2b2f36; border-radius: 6px; padding: 3px 8px; letter-spacing: 1px; }
+  .style-head h2 { font-size: 17px; color: #2b2f36; }
+  .style-desc { font-size: 12.5px; color: #6b7280; line-height: 1.7; padding: 0 6px 14px; }
+
+  .phone {
+    width: 330px; background: #23262c; border-radius: 36px; padding: 8px;
+    box-shadow: 0 18px 36px rgba(30,35,45,.22); display: inline-block;
+  }
+  .screen { height: 560px; border-radius: 29px; overflow-y: auto; position: relative; }
+  figure { margin: 0; }
+  figcaption { font-size: 12px; color: #8a919c; text-align: center; margin-top: 10px; }
+
+  /* ============ 公共结构（新拟物 + 打卡） ============ */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; padding: 7px 13px;
+    font-size: 13px; font-weight: 800;
+  }
+  .cal { display: flex; justify-content: space-between; border-radius: 16px; padding: 13px 15px; margin-bottom: 18px; }
+  .cal i {
+    width: 27px; height: 27px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-style: normal; font-size: 12px; font-weight: 900;
+  }
+  h3 { font-size: 19px; font-weight: 800; margin: 0 0 4px; }
+  .sub { font-size: 12.5px; margin-bottom: 18px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; }
+  .mcard { border-radius: 20px; padding: 17px 14px 14px; cursor: pointer; transition: box-shadow .15s, transform .15s; }
+  .mcard:active { transform: scale(.98); }
+  .mcard .ic {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 19px;
+  }
+  .mcard b { display: block; font-size: 14px; margin-top: 10px; }
+  .mcard span { display: block; font-size: 10.5px; margin-top: 3px; }
+  .quest { border-radius: 16px; padding: 13px 15px; display: flex; align-items: center; gap: 11px; margin-top: 19px; }
+  .quest .qi { font-size: 20px; }
+  .quest .qt { flex: 1; }
+  .quest .qt b { display: block; font-size: 12.5px; font-weight: 800; }
+  .quest .qbar { height: 12px; border-radius: 999px; margin-top: 7px; overflow: hidden; }
+  .quest .qbar i { display: block; height: 100%; border-radius: 999px; }
+  .quest .qn { font-size: 11.5px; font-weight: 900; }
+
+  /* ============================================================
+     C1 暖白素净：只加一个活力橙
+     ============================================================ */
+  .c1 .screen { background: #ece7df; }
+  .c1 .wrap { padding: 20px 20px 24px; }
+  .c1 .chip, .c1 .mcard, .c1 .cal, .c1 .quest {
+    background: #ece7df;
+    box-shadow: 7px 7px 14px #d3ccc0, -7px -7px 14px #fffdf8;
+  }
+  .c1 .chip.streak { color: #b06a35; }
+  .c1 .chip.streak b { color: #e8823c; font-size: 15px; }
+  .c1 .chip.gem { color: #9a917f; }
+  .c1 .cal { box-shadow: inset 4px 4px 9px #d3ccc0, inset -4px -4px 9px #fffdf8; }
+  .c1 .cal i { background: #ece7df; color: #c8c0b0; box-shadow: inset 3px 3px 6px #d3ccc0, inset -3px -3px 6px #fffdf8; }
+  .c1 .cal i.on { color: #fff; background: #e8823c; box-shadow: 3px 3px 7px #d3a686, -2px -2px 6px #fffdf8; }
+  .c1 .cal i.today { border: 2.5px solid #e8823c; color: #e8823c; }
+  .c1 h3 { color: #4a443a; }
+  .c1 .sub { color: #a39a89; }
+  .c1 .mcard .ic { box-shadow: inset 3px 3px 6px #d3ccc0, inset -3px -3px 6px #fffdf8; }
+  .c1 .mcard b { color: #4a443a; }
+  .c1 .mcard span { color: #a39a89; }
+  .c1 .mcard:hover { box-shadow: 9px 9px 18px #d3ccc0, -9px -9px 18px #fffdf8; }
+  .c1 .mcard:active { box-shadow: inset 5px 5px 10px #d3ccc0, inset -5px -5px 10px #fffdf8; }
+  .c1 .quest .qt b { color: #4a443a; }
+  .c1 .quest .qbar { background: #ded7ca; box-shadow: inset 2px 2px 5px #cfc7b8; }
+  .c1 .quest .qbar i { width: 80%; background: linear-gradient(90deg, #f0a35e, #e8823c); }
+  .c1 .quest .qn { color: #e8823c; }
+
+  /* ============================================================
+     C2 灰蓝底 + 四色柔和点缀
+     ============================================================ */
+  .c2 .screen { background: #e3e8f0; }
+  .c2 .wrap { padding: 20px 20px 24px; }
+  .c2 .chip, .c2 .mcard, .c2 .cal, .c2 .quest {
+    background: #e3e8f0;
+    box-shadow: 7px 7px 14px #c8cfda, -7px -7px 14px #ffffff;
+  }
+  .c2 .chip.streak { color: #6b5a45; }
+  .c2 .chip.streak b { color: #f0824c; font-size: 15px; }
+  .c2 .chip.gem { color: #7a6fc9; }
+  .c2 .cal { box-shadow: inset 4px 4px 9px #c8cfda, inset -4px -4px 9px #ffffff; }
+  .c2 .cal i { background: #e3e8f0; color: #c2c9d6; box-shadow: inset 3px 3px 6px #c8cfda, inset -3px -3px 6px #ffffff; }
+  .c2 .cal i.on { color: #fff; background: #7a9ef5; box-shadow: 3px 3px 7px #a3b4d6, -2px -2px 6px #ffffff; }
+  .c2 .cal i.today { border: 2.5px solid #7a9ef5; color: #7a9ef5; }
+  .c2 h3 { color: #3d4454; }
+  .c2 .sub { color: #8b93a5; }
+  .c2 .mcard .ic { background: var(--tint); box-shadow: inset 2px 2px 5px rgba(0,0,0,.08), inset -2px -2px 5px rgba(255,255,255,.7); }
+  .c2 .mcard b { color: #3d4454; }
+  .c2 .mcard span { color: #8b93a5; }
+  .c2 .mcard .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--dot); margin-right: 5px; vertical-align: 1px; }
+  .c2 .mcard:hover { box-shadow: 9px 9px 18px #c8cfda, -9px -9px 18px #ffffff; }
+  .c2 .mcard:active { box-shadow: inset 5px 5px 10px #c8cfda, inset -5px -5px 10px #ffffff; }
+  .c2 .quest .qt b { color: #3d4454; }
+  .c2 .quest .qbar { background: #d4dae6; box-shadow: inset 2px 2px 5px #c5ccdb; }
+  .c2 .quest .qbar i { width: 80%; background: linear-gradient(90deg, #8fb0f7, #6f8ef2); }
+  .c2 .quest .qn { color: #7a9ef5; }
+
+  /* ============================================================
+     C3 彩色新拟物：每张卡一个色系（阴影同色）
+     ============================================================ */
+  .c3 .screen { background: #eae6e1; }
+  .c3 .wrap { padding: 20px 20px 24px; }
+  .c3 .chip, .c3 .cal, .c3 .quest {
+    background: #eae6e1;
+    box-shadow: 7px 7px 14px #d5cfc7, -7px -7px 14px #fffefa;
+  }
+  .c3 .chip.streak { color: #a0622d; }
+  .c3 .chip.streak b { color: #e8823c; font-size: 15px; }
+  .c3 .chip.gem { color: #6f9b46; }
+  .c3 .cal { box-shadow: inset 4px 4px 9px #d5cfc7, inset -4px -4px 9px #fffefa; }
+  .c3 .cal i { background: #eae6e1; color: #ccc5b8; box-shadow: inset 3px 3px 6px #d5cfc7, inset -3px -3px 6px #fffefa; }
+  .c3 .cal i.on { color: #fff; background: #eda45f; box-shadow: 3px 3px 7px #d3b08c, -2px -2px 6px #fffefa; }
+  .c3 .cal i.today { border: 2.5px solid #eda45f; color: #eda45f; }
+  .c3 h3 { color: #4d463c; }
+  .c3 .sub { color: #a59c8d; }
+  .c3 .mcard { background: var(--bg); box-shadow: 7px 7px 14px var(--dark), -7px -7px 14px var(--light); }
+  .c3 .mcard:hover { box-shadow: 9px 9px 18px var(--dark), -9px -9px 18px var(--light); }
+  .c3 .mcard:active { box-shadow: inset 5px 5px 10px var(--dark), inset -5px -5px 10px var(--light); }
+  .c3 .mcard .ic { background: rgba(255,255,255,.55); box-shadow: inset 2px 2px 5px rgba(0,0,0,.06), inset -2px -2px 5px rgba(255,255,255,.8); }
+  .c3 .mcard b { color: var(--tx); }
+  .c3 .mcard span { color: var(--tx); opacity: .62; }
+  .c3 .m1 { --bg: #f4ddd6; --dark: #d9b3ab; --light: #fffaf7; --tx: #a24c38; }
+  .c3 .m2 { --bg: #d9e3f4; --dark: #b3c2dc; --light: #f8fbff; --tx: #3e5e96; }
+  .c3 .m3 { --bg: #dcead9; --dark: #b8cdb4; --light: #f9fdf7; --tx: #41703f; }
+  .c3 .m4 { --bg: #f2e6cf; --dark: #d6c5a5; --light: #fffdf6; --tx: #8f6b25; }
+  .c3 .quest .qt b { color: #4d463c; }
+  .c3 .quest .qbar { background: #dcd5ca; box-shadow: inset 2px 2px 5px #cdc6ba; }
+  .c3 .quest .qbar i { width: 80%; background: linear-gradient(90deg, #eda45f, #e07f3a); }
+  .c3 .quest .qn { color: #e07f3a; }
+</style>
+</head>
+<body>
+
+<div class="ph">
+  <h1>融合版对比：新拟物骨架 × 多邻国打卡</h1>
+  <p>结构完全相同（连击 + 7 格日历 + 模式卡 + 任务条），只对比「加多少色彩」</p>
+</div>
+
+<!-- ============ C1 ============ -->
+<div class="style-block c1">
+  <div class="style-head">
+    <span class="idx">C1</span><h2>素净档 · 单色点缀</h2>
+  </div>
+  <div class="style-desc">暖白新拟物，全站只加一个<b>活力橙</b>：打卡勾、今日格、进度条、连击数字。最克制耐看，气质接近高端效率工具。</div>
+  <div class="row">
+    <figure>
+      <div class="phone"><div class="screen"><div class="wrap">
+        <div class="topbar">
+          <span class="chip streak">🔥 连击 <b>6</b> 天</span>
+          <span class="chip gem">💎 520</span>
+        </div>
+        <div class="cal"><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="today">?</i></div>
+        <h3>今天练什么？</h3>
+        <div class="sub">完成任意 1 次练习 = 今日打卡 ✓</div>
+        <div class="grid">
+          <div class="mcard"><span class="ic">💬</span><b>话题闲聊</b><span>每日话题 · 轻松开口</span></div>
+          <div class="mcard"><span class="ic">🎙️</span><b>自言自语</b><span>无人打扰 · 随心说</span></div>
+          <div class="mcard"><span class="ic">🎤</span><b>演讲练习</b><span>命题 / 自由 · 1-5 分钟</span></div>
+          <div class="mcard"><span class="ic">💼</span><b>面试模拟</b><span>随机 / JD 全流程</span></div>
+        </div>
+        <div class="quest">
+          <span class="qi">📜</span>
+          <div class="qt"><b>本周任务：完成 5 次练习</b><div class="qbar"><i></i></div></div>
+          <span class="qn">4/5</span>
+        </div>
+      </div></div></div>
+      <figcaption>C1 · 暖白 + 单橙</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- ============ C2 ============ -->
+<div class="style-block c2">
+  <div class="style-head">
+    <span class="idx">C2</span><h2>清爽档 · 四色点缀</h2>
+  </div>
+  <div class="style-desc">保持灰蓝新拟物底，给四个模式各配一枚<b>柔和彩色徽章</b>（蓝/紫/绿/橙），打卡和任务条用「知更蓝」。色彩有了归属感（每个场景一种颜色），整体依然干净。</div>
+  <div class="row">
+    <figure>
+      <div class="phone"><div class="screen"><div class="wrap">
+        <div class="topbar">
+          <span class="chip streak">🔥 连击 <b>6</b> 天</span>
+          <span class="chip gem">💎 520</span>
+        </div>
+        <div class="cal"><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="today">?</i></div>
+        <h3>今天练什么？</h3>
+        <div class="sub">完成任意 1 次练习 = 今日打卡 ✓</div>
+        <div class="grid">
+          <div class="mcard" style="--tint:#dce7fb; --dot:#7a9ef5;"><span class="ic">💬</span><b><i class="dot"></i>话题闲聊</b><span>每日话题 · 轻松开口</span></div>
+          <div class="mcard" style="--tint:#e6def7; --dot:#a78bfa;"><span class="ic">🎙️</span><b><i class="dot"></i>自言自语</b><span>无人打扰 · 随心说</span></div>
+          <div class="mcard" style="--tint:#ddefdf; --dot:#66b87a;"><span class="ic">🎤</span><b><i class="dot"></i>演讲练习</b><span>命题 / 自由 · 1-5 分钟</span></div>
+          <div class="mcard" style="--tint:#fbe8d4; --dot:#f0824c;"><span class="ic">💼</span><b><i class="dot"></i>面试模拟</b><span>随机 / JD 全流程</span></div>
+        </div>
+        <div class="quest">
+          <span class="qi">📜</span>
+          <div class="qt"><b>本周任务：完成 5 次练习</b><div class="qbar"><i></i></div></div>
+          <span class="qn">4/5</span>
+        </div>
+      </div></div></div>
+      <figcaption>C2 · 灰蓝底 + 四色徽章</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- ============ C3 ============ -->
+<div class="style-block c3">
+  <div class="style-head">
+    <span class="idx">C3</span><h2>活力档 · 彩色新拟物</h2>
+  </div>
+  <div class="style-desc">新拟物的进阶玩法：四张卡直接用<b>淡彩底 + 同色系阴影</b>（粉/蓝/绿/米金），像四块不同口味的软糖，按下时陷进自己的颜色里。打卡和连击用活力橙。色彩最丰富，但依然保持柔和质感，不吵。</div>
+  <div class="row">
+    <figure>
+      <div class="phone"><div class="screen"><div class="wrap">
+        <div class="topbar">
+          <span class="chip streak">🔥 连击 <b>6</b> 天</span>
+          <span class="chip gem">💎 520</span>
+        </div>
+        <div class="cal"><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="on">✓</i><i class="today">?</i></div>
+        <h3>今天练什么？</h3>
+        <div class="sub">完成任意 1 次练习 = 今日打卡 ✓</div>
+        <div class="grid">
+          <div class="mcard m1"><span class="ic">💬</span><b>话题闲聊</b><span>每日话题 · 轻松开口</span></div>
+          <div class="mcard m2"><span class="ic">🎙️</span><b>自言自语</b><span>无人打扰 · 随心说</span></div>
+          <div class="mcard m3"><span class="ic">🎤</span><b>演讲练习</b><span>命题 / 自由 · 1-5 分钟</span></div>
+          <div class="mcard m4"><span class="ic">💼</span><b>面试模拟</b><span>随机 / JD 全流程</span></div>
+        </div>
+        <div class="quest">
+          <span class="qi">📜</span>
+          <div class="qt"><b>本周任务：完成 5 次练习</b><div class="qbar"><i></i></div></div>
+          <span class="qn">4/5</span>
+        </div>
+      </div></div></div>
+      <figcaption>C3 · 彩色软糖卡（可按压体验同色凹陷）</figcaption>
+    </figure>
+  </div>
+</div>
+
+</body>
+</html>
