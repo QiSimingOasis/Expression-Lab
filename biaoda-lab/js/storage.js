@@ -51,6 +51,12 @@ const Storage = (function () {
 
     if (!out.mode_code) out.mode_code = out.scene + out.level_segment;
 
+    // —— v2.0.0 兼容：如果顶层记录缺失 summary/improvements，但 dimensions 有 coaching/suggestions 或
+    // 从 r.overall 补 summary；从 r.dimensions 聚合 improvements。
+    if (!out.summary && typeof r.overall === 'string' && r.overall) {
+      out.summary = r.overall;
+    }
+
     // scores
     if (r.scores && typeof r.scores === 'object') {
       out.scores = {
@@ -74,15 +80,40 @@ const Storage = (function () {
 
     // dimensions 数组（如果不存在就从 scores 构造，保证后续 render 统一）
     if (Array.isArray(r.dimensions)) {
-      out.dimensions = r.dimensions.map(d => ({
-        key: d.key || d.name_key || _guessKeyByName(d.name),
-        name: d.name,
-        score: +(+d.score).toFixed(1),
-        level: d.level || _scoreLevel(d.score),
-        label: d.label || '',
-        comment: d.comment || '',
-        evidence: Array.isArray(d.evidence) ? d.evidence : [],
-      }));
+      const LABEL_MAP = { L1: '需要刻意练习', L2: '基础合格', L3: '表达良好', L4: '接近专业' };
+      out.dimensions = r.dimensions.map(d => {
+        const key = d.key || d.name_key || _guessKeyByName(d.name);
+        const score = +(+d.score).toFixed(1);
+        const level = d.level || _scoreLevel(score);
+        // v2.0.0 字段：comment ← coaching；suggestion ← 首条 suggestions；顶层 v1 label 补默认
+        let comment = d.comment || '';
+        if (!comment && d.coaching) comment = String(d.coaching);
+        let suggestion = d.suggestion || '';
+        if (!suggestion) {
+          if (Array.isArray(d.suggestions) && d.suggestions.length) {
+            const first = d.suggestions[0];
+            const text = (first.improved || first.original || '').toString();
+            suggestion = text.length > 30 ? text.slice(0, 28) + '…' : text;
+          } else if (d.coaching) {
+            const s = String(d.coaching).replace(/\s+/g, ' ');
+            suggestion = s.length > 28 ? s.slice(0, 26) + '…' : s;
+          } else {
+            suggestion = '多开口练习，每次只改善一个具体点。';
+          }
+        }
+        return {
+          key,
+          name: d.name,
+          score,
+          level,
+          label: d.label || LABEL_MAP[level] || '',
+          coaching: d.coaching || '',
+          comment,
+          suggestion,
+          suggestions: Array.isArray(d.suggestions) ? d.suggestions : [],
+          evidence: Array.isArray(d.evidence) ? d.evidence : [],
+        };
+      });
     } else {
       const LEVEL_MAP = {
         structure:    { L1: '自由发散', L2: '初步成型', L3: '结构清晰', L4: '驾轻就熟' },
@@ -102,6 +133,31 @@ const Storage = (function () {
           evidence: (r.dimensions && Array.isArray(r.dimensions[key]?.evidence)) ? r.dimensions[key].evidence : [],
         };
       });
+    }
+
+    // —— v2 兼容：如果顶层 improvements 为空，但 out.dimensions 带 suggestions[]，则聚合填充
+    if ((!out.improvements || !out.improvements.length) && Array.isArray(out.dimensions)) {
+      const merged = [];
+      out.dimensions.forEach(d => {
+        if (Array.isArray(d.suggestions) && d.suggestions.length) {
+          d.suggestions.forEach(sg => {
+            if (!sg || (!sg.original && !sg.improved)) return;
+            merged.push({
+              dimension: d.name || '',
+              original: sg.original || '',
+              improved: sg.improved || sg.original || '',
+              reason: sg.reason || (sg.context ? `上下文：${sg.context}` : '') || '',
+            });
+          });
+        }
+      });
+      if (merged.length) out.improvements = merged;
+    }
+
+    // —— v2 兼容：如果 summary 仍为空，从 dimensions[0].comment 兜底
+    if (!out.summary && Array.isArray(out.dimensions) && out.dimensions[0]?.comment) {
+      out.summary = out.dimensions.map(d => d.comment).filter(Boolean).join(' ');
+      if (out.summary.length > 160) out.summary = out.summary.slice(0, 158) + '…';
     }
 
     return out;

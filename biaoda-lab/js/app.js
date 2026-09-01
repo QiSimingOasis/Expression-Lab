@@ -67,6 +67,80 @@ const App = (function () {
   }
 
   /**
+   * Prompt v2.0.0 → 前端渲染用的 v1 兼容结构。
+   * 新版字段（参见 api/analyze.js）：
+   *   prompt_version / scene / scores{logic,..} / overall /
+   *   dimensions[{key,name,score,level:"L1-L4",coaching,suggestions[]}]
+   * 旧版 v1 渲染依赖：summary / dimensions[i].comment / .suggestion /
+   *                    .label / improvements[{original,improved,reason,dimension}]
+   * 本函数在 v2 结构上直接"就地填充"这些旧字段，使 renderResultDrawer、
+   * renderSuggestionsBlock、renderRecordList 等无需改动。
+   * @param {Object} analysis  分析结果对象（v1 或 v2 都可）
+   * @returns {Object} 同一个 analysis，原地补齐兼容字段
+   */
+  function normalizeAnalysisV2(analysis) {
+    if (!analysis || typeof analysis !== 'object') return analysis;
+
+    // v1 → 已经是 summary/comment/suggestion/improvements，跳过
+    const isV2 = !analysis.summary && (analysis.overall || analysis.prompt_version);
+    if (!isV2) return analysis;
+
+    // 1. summary ← overall
+    if (!analysis.summary && analysis.overall) {
+      analysis.summary = analysis.overall;
+    }
+
+    // 2. 聚合 improvements：把所有维度 suggestions[] 平铺
+    const aggregatedImprovements = [];
+
+    // 3. dimensions[i] 补齐 comment / suggestion / label
+    if (Array.isArray(analysis.dimensions)) {
+      analysis.dimensions.forEach(d => {
+        // level tag 右侧附加的级别说明
+        if (!d.label) {
+          const lvMap = { L1: '需要刻意练习', L2: '基础合格', L3: '表达良好', L4: '接近专业' };
+          d.label = lvMap[d.level] || '';
+        }
+        // comment ← coaching（具体问题 + 方向，通常 3-4 句话）
+        if (!d.comment && d.coaching) d.comment = String(d.coaching);
+
+        // suggestion ← 第一条 suggestions[].improved 的摘要；否则用 coaching 里的前 20 字
+        if (!d.suggestion) {
+          if (Array.isArray(d.suggestions) && d.suggestions.length) {
+            const first = d.suggestions[0];
+            const text = (first.improved || first.original || '').toString();
+            d.suggestion = text.length > 30 ? text.slice(0, 28) + '…' : text;
+          } else if (d.coaching) {
+            const s = String(d.coaching).replace(/\s+/g, ' ');
+            d.suggestion = s.length > 28 ? s.slice(0, 26) + '…' : s;
+          } else {
+            d.suggestion = '多开口练习，每次只改善一个具体点。';
+          }
+        }
+
+        // 把本维度 suggestions 全部累积到顶层 improvements
+        if (Array.isArray(d.suggestions) && d.suggestions.length) {
+          d.suggestions.forEach((sg, i) => {
+            if (!sg || (!sg.original && !sg.improved)) return;
+            aggregatedImprovements.push({
+              dimension: d.name || d.key || '',
+              original: sg.original || '',
+              improved: sg.improved || sg.original || '',
+              reason: sg.reason || (sg.context ? `上下文：${sg.context}` : '') || '',
+            });
+          });
+        }
+      });
+    }
+
+    if (!Array.isArray(analysis.improvements) || !analysis.improvements.length) {
+      analysis.improvements = aggregatedImprovements;
+    }
+
+    return analysis;
+  }
+
+  /**
    * 页内时长选择浮层（替代 window.prompt，兼容 iframe sandbox）
    * 返回 Promise<'1'|'3'|'5'>；用户取消则 resolve(null)
    */
@@ -159,21 +233,33 @@ const App = (function () {
     const totalEl = qs('dash-total');
     if (totalEl) totalEl.innerHTML = '💎 累计 <b>' + records.length + '</b> 次';
 
-    // 最近 7 天日历：最左 = 6 天前，最右 = 今天
+    // 最近 7 天日历：今日居中（index 3）→ i∈[-3,3]
+    // 单元格分两行：上=周几，下=日期号（已打卡显示打勾色圆+日期号）
     const cal = qs('dash-cal');
     if (!cal) return;
     cal.innerHTML = '';
     const week = ['日', '一', '二', '三', '四', '五', '六'];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
+    const today = new Date();
+    for (let offset = -3; offset <= 3; offset++) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
       const ds = _localDateStr(d);
-      const cell = document.createElement('span');
-      cell.className = 'cal-cell' + (dateSet.has(ds) ? ' is-done' : '') + (i === 0 ? ' is-today' : '');
-      cell.innerHTML = dateSet.has(ds)
-        ? '<i>✓</i>'
-        : (i === 0 ? '<i>?</i>' : '<i>·</i>');
-      cell.title = (d.getMonth() + 1) + '月' + d.getDate() + '日（周' + week[d.getDay()] + '）' + (dateSet.has(ds) ? ' 已打卡' : ' 未打卡');
+      const todayStr = _localDateStr(today);
+      const done = dateSet.has(ds);
+      const isToday = (ds === todayStr);
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell' + (done ? ' is-done' : '') + (isToday ? ' is-today' : '');
+
+      const wd = document.createElement('span');
+      wd.className = 'cal-wd';
+      wd.textContent = week[d.getDay()];
+      cell.appendChild(wd);
+
+      const day = document.createElement('span');
+      day.className = 'cal-day';
+      day.textContent = String(d.getDate());
+      cell.appendChild(day);
+
+      cell.title = (d.getMonth() + 1) + '月' + d.getDate() + '日（周' + week[d.getDay()] + '）' + (done ? ' 已打卡' : ' 未打卡');
       cal.appendChild(cell);
     }
   }
@@ -797,6 +883,8 @@ const App = (function () {
 
       // 阶段 2：分析
       analysis = await API.analyzeExpression(transcript, { scene: P.scene, levelSegment, topic: P.topic?.title || '' });
+      // v2.0.0 → v1 字段兼容（overall/summary、coaching/comment、suggestions/improvements）
+      analysis = normalizeAnalysisV2(analysis || {});
       // 最小展示 1200ms：让用户看见「分析中」变绿
       await _minDelay(t1, 1200);
       analysis.mode_code = P.scene + levelSegment;
@@ -946,6 +1034,8 @@ const App = (function () {
         try {
           const lr = JSON.parse(lastStr);
           if (lr.analysis) {
+            // v2 兼容：本地存储的老数据如果是 v2 结构但缺失 v1 字段，就地补齐
+            normalizeAnalysisV2(lr.analysis);
             record = {
               id: lr.id || 'last',
               created_at: lr.createdAt || new Date().toISOString(),
@@ -1269,6 +1359,9 @@ const App = (function () {
 
     renderProfileStats(valid);
 
+    // 月度打卡热力图（当前月）
+    renderMonthHeatmap(valid);
+
     // 雷达：最近 5 条平均分
     const lastN = valid.slice(0, 5);
     renderAvgRadar(lastN);
@@ -1342,6 +1435,94 @@ const App = (function () {
           pointLabels: { font: { size: 11 }, color: '#51586d' } } },
       },
     });
+  }
+
+  /** 个人中心：当前月打卡热力图（简单月度热力图，周一为首列） */
+  function renderMonthHeatmap(valid) {
+    const root = qs('month-heatmap');
+    const title = qs('heatmap-month-title');
+    if (!root) return;
+    root.innerHTML = '';
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    if (title) title.textContent = `${y} 年 ${m + 1} 月`;
+
+    // 当日本地 YYYY-MM-DD
+    const todayStr = _localDateStr(now);
+
+    // 打卡日期集合（当天次数）
+    const dayCountMap = {};
+    valid.forEach(r => {
+      const ds = _localDateStr(new Date(r.created_at));
+      dayCountMap[ds] = (dayCountMap[ds] || 0) + 1;
+    });
+
+    // 星期列标题（周一为首列：一/二/三/四/五/六/日）
+    const weekLabels = ['一', '二', '三', '四', '五', '六', '日'];
+    const wdRow = document.createElement('div');
+    wdRow.className = 'heatmap-wdrow';
+    weekLabels.forEach(w => {
+      const el = document.createElement('div');
+      el.className = 'heatmap-wd';
+      el.textContent = w;
+      wdRow.appendChild(el);
+    });
+    root.appendChild(wdRow);
+
+    // 本月 1 号是星期几（JS 0=周日，转成 0=周一..6=周日）
+    const first = new Date(y, m, 1);
+    const firstDowJS = first.getDay(); // 0=周日..6=周六
+    const firstCol = (firstDowJS + 6) % 7; // 0=周一..6=周日
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+    const grid = document.createElement('div');
+    grid.className = 'heatmap-grid';
+
+    // 前置空格
+    for (let i = 0; i < firstCol; i++) {
+      const ph = document.createElement('div');
+      ph.className = 'heatmap-cell heatmap-cell--empty';
+      grid.appendChild(ph);
+    }
+
+    const todayCount = dayCountMap[todayStr] || 0;
+    const countValues = Object.values(dayCountMap);
+    const maxCount = Math.max(1, ...countValues);
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dObj = new Date(y, m, d);
+      const ds = _localDateStr(dObj);
+      const count = dayCountMap[ds] || 0;
+      const cell = document.createElement('div');
+      const classes = ['heatmap-cell'];
+      // 热力等级：0次 空；1次 L1；2-3次 L2；≥4次 L3
+      if (count === 0) classes.push('heatmap-cell--empty');
+      else if (count === 1) classes.push('heatmap-cell--l1');
+      else if (count <= 3) classes.push('heatmap-cell--l2');
+      else classes.push('heatmap-cell--l3');
+      if (ds === todayStr) classes.push('heatmap-cell--today');
+      cell.className = classes.join(' ');
+      cell.textContent = String(d);
+      cell.title = `${m + 1}月${d}日${count ? `：${count} 次练习` : '：未打卡'}`;
+      grid.appendChild(cell);
+    }
+
+    root.appendChild(grid);
+
+    // 图例
+    const legend = document.createElement('div');
+    legend.className = 'heatmap-legend';
+    legend.innerHTML = `
+      <span>少</span>
+      <span class="heatmap-cell heatmap-cell--empty"></span>
+      <span class="heatmap-cell heatmap-cell--l1"></span>
+      <span class="heatmap-cell heatmap-cell--l2"></span>
+      <span class="heatmap-cell heatmap-cell--l3"></span>
+      <span>多</span>
+    `;
+    root.appendChild(legend);
   }
 
   function renderGrowthCurve(last10) {

@@ -18,12 +18,14 @@
   </header>
 
   <main class="home-main">
-    <!-- 打卡仪表盘：连击 + 累计 + 最近 7 天日历（JS 渲染） -->
+    <!-- 上排：连击 + 累计 -->
+    <div class="home-top-chips">
+      <span class="dash-chip dash-chip--streak" id="dash-streak">🔥 连击 <b>0</b> 天</span>
+      <span class="dash-chip dash-chip--total" id="dash-total">💎 累计 <b>0</b> 次</span>
+    </div>
+
+    <!-- 打卡仪表盘：最近 7 天日历（今日居中，显示日期号） -->
     <section class="home-dash" aria-label="练习打卡">
-      <div class="home-dash-chips">
-        <span class="dash-chip dash-chip--streak" id="dash-streak">🔥 连击 <b>0</b> 天</span>
-        <span class="dash-chip dash-chip--total" id="dash-total">💎 累计 <b>0</b> 次</span>
-      </div>
       <div class="home-cal" id="dash-cal" aria-label="最近 7 天打卡日历"></div>
     </section>
 
