@@ -2569,15 +2569,15 @@ a {
   border-radius: 3px;
   background: #ebedf0;
 }
-/* GitHub 经典 5 级绿色阶 */
+/* 打卡 5 级橙色阶（由浅到深，对齐品牌橙 #e8823c） */
 .gh-cell--0 { background: #ebedf0; }
-.gh-cell--1 { background: #9be9a8; }
-.gh-cell--2 { background: #40c463; }
-.gh-cell--3 { background: #30a14e; }
-.gh-cell--4 { background: #216e39; }
-/* 今天：品牌橙描边锚点 */
+.gh-cell--1 { background: #fbe0cb; }
+.gh-cell--2 { background: #f5b584; }
+.gh-cell--3 { background: #e8823c; }
+.gh-cell--4 { background: #c2621f; }
+/* 今天：白边 + 品牌橙环双圈，在任意底色上都清晰 */
 .gh-cell--today {
-  box-shadow: 0 0 0 1.5px var(--color-primary);
+  box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px var(--color-primary);
 }
 
 /* 图例：少 → 多 */
