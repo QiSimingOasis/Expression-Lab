@@ -229,12 +229,12 @@ const App = (function () {
     }
 
     const streakEl = qs('dash-streak');
-    if (streakEl) streakEl.innerHTML = '🔥 连击 <b>' + streak + '</b> 天';
+    if (streakEl) streakEl.innerHTML = '🔥 <b>' + streak + '</b>';
     const totalEl = qs('dash-total');
-    if (totalEl) totalEl.innerHTML = '💎 累计 <b>' + records.length + '</b> 次';
+    if (totalEl) totalEl.innerHTML = '💎 <b>' + records.length + '</b>';
 
     // 最近 7 天日历：今日居中（index 3）→ i∈[-3,3]
-    // 单元格分两行：上=周几，下=日期号（已打卡显示打勾色圆+日期号）
+    // 只显示日期号（星期信息放在 title 悬浮提示里）
     const cal = qs('dash-cal');
     if (!cal) return;
     cal.innerHTML = '';
@@ -248,11 +248,6 @@ const App = (function () {
       const isToday = (ds === todayStr);
       const cell = document.createElement('div');
       cell.className = 'cal-cell' + (done ? ' is-done' : '') + (isToday ? ' is-today' : '');
-
-      const wd = document.createElement('span');
-      wd.className = 'cal-wd';
-      wd.textContent = week[d.getDay()];
-      cell.appendChild(wd);
 
       const day = document.createElement('span');
       day.className = 'cal-day';
@@ -1438,91 +1433,113 @@ const App = (function () {
   }
 
   /** 个人中心：当前月打卡热力图（简单月度热力图，周一为首列） */
+  /**
+   * 打卡热力图（GitHub 贡献图风格）：
+   * - 永远展示最近 12 个月（52 周 + 当周），每列一周、7 行星期，横向滚动
+   * - 起点对齐周日、终点止于今天（未来不画格子，右侧无空白）
+   * - 5 级绿色阶；今天用品牌橙描边高亮
+   */
   function renderMonthHeatmap(valid) {
     const root = qs('month-heatmap');
     const title = qs('heatmap-month-title');
     if (!root) return;
     root.innerHTML = '';
+    if (title) title.textContent = '近 12 个月打卡';
 
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    if (title) title.textContent = `${y} 年 ${m + 1} 月`;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = _localDateStr(today);
 
-    // 当日本地 YYYY-MM-DD
-    const todayStr = _localDateStr(now);
-
-    // 打卡日期集合（当天次数）
+    // 打卡日期 → 当天练习次数
     const dayCountMap = {};
     valid.forEach(r => {
       const ds = _localDateStr(new Date(r.created_at));
       dayCountMap[ds] = (dayCountMap[ds] || 0) + 1;
     });
 
-    // 星期列标题（周一为首列：一/二/三/四/五/六/日）
-    const weekLabels = ['一', '二', '三', '四', '五', '六', '日'];
-    const wdRow = document.createElement('div');
-    wdRow.className = 'heatmap-wdrow';
-    weekLabels.forEach(w => {
-      const el = document.createElement('div');
-      el.className = 'heatmap-wd';
-      el.textContent = w;
-      wdRow.appendChild(el);
-    });
-    root.appendChild(wdRow);
+    // 范围：52 周前的周日 → 今天（终点不留未来空格）
+    const start = new Date(today);
+    start.setDate(start.getDate() - 364);
+    start.setDate(start.getDate() - start.getDay()); // 回退到当周周日
+    const totalDays = Math.round((today - start) / 86400000) + 1;
+    const weeks = Math.ceil(totalDays / 7);
 
-    // 本月 1 号是星期几（JS 0=周日，转成 0=周一..6=周日）
-    const first = new Date(y, m, 1);
-    const firstDowJS = first.getDay(); // 0=周日..6=周六
-    const firstCol = (firstDowJS + 6) % 7; // 0=周一..6=周日
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const levelClass = (count) => {
+      if (count <= 0) return 'gh-cell--0';
+      if (count === 1) return 'gh-cell--1';
+      if (count === 2) return 'gh-cell--2';
+      if (count <= 4) return 'gh-cell--3';
+      return 'gh-cell--4';
+    };
 
-    const grid = document.createElement('div');
-    grid.className = 'heatmap-grid';
+    const wrap = document.createElement('div');
+    wrap.className = 'gh-heatmap';
 
-    // 前置空格
-    for (let i = 0; i < firstCol; i++) {
-      const ph = document.createElement('div');
-      ph.className = 'heatmap-cell heatmap-cell--empty';
-      grid.appendChild(ph);
+    const scroll = document.createElement('div');
+    scroll.className = 'gh-scroll';
+
+    // —— 顶部月份标签：每周一列，包含 1 号的那一周显示月份
+    const monthsRow = document.createElement('div');
+    monthsRow.className = 'gh-months';
+    for (let w = 0; w < weeks; w++) {
+      const lab = document.createElement('span');
+      lab.className = 'gh-month-label';
+      const sunday = new Date(start);
+      sunday.setDate(start.getDate() + w * 7);
+      if (sunday.getDate() <= 7) lab.textContent = (sunday.getMonth() + 1) + '月';
+      monthsRow.appendChild(lab);
     }
+    scroll.appendChild(monthsRow);
 
-    const todayCount = dayCountMap[todayStr] || 0;
-    const countValues = Object.values(dayCountMap);
-    const maxCount = Math.max(1, ...countValues);
+    const body = document.createElement('div');
+    body.className = 'gh-body';
 
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dObj = new Date(y, m, d);
-      const ds = _localDateStr(dObj);
+    // —— 左侧星期列（只标 一/三/五，与 GitHub 一致）
+    const wdCol = document.createElement('div');
+    wdCol.className = 'gh-wdcol';
+    ['', '一', '', '三', '', '五', ''].forEach(t => {
+      const s = document.createElement('span');
+      s.textContent = t;
+      wdCol.appendChild(s);
+    });
+    body.appendChild(wdCol);
+
+    // —— 格子区：grid 按列填充，每列 7 格（周日→周六）
+    const grid = document.createElement('div');
+    grid.className = 'gh-grid';
+    const cursor = new Date(start);
+    for (let i = 0; i < totalDays; i++) {
+      const ds = _localDateStr(cursor);
       const count = dayCountMap[ds] || 0;
       const cell = document.createElement('div');
-      const classes = ['heatmap-cell'];
-      // 热力等级：0次 空；1次 L1；2-3次 L2；≥4次 L3
-      if (count === 0) classes.push('heatmap-cell--empty');
-      else if (count === 1) classes.push('heatmap-cell--l1');
-      else if (count <= 3) classes.push('heatmap-cell--l2');
-      else classes.push('heatmap-cell--l3');
-      if (ds === todayStr) classes.push('heatmap-cell--today');
-      cell.className = classes.join(' ');
-      cell.textContent = String(d);
-      cell.title = `${m + 1}月${d}日${count ? `：${count} 次练习` : '：未打卡'}`;
+      const cls = ['gh-cell', levelClass(count)];
+      if (ds === todayStr) cls.push('gh-cell--today');
+      cell.className = cls.join(' ');
+      cell.title = (cursor.getMonth() + 1) + '月' + cursor.getDate() + '日' + (count ? `：${count} 次练习` : '：未打卡');
       grid.appendChild(cell);
+      cursor.setDate(cursor.getDate() + 1);
     }
+    body.appendChild(grid);
+    scroll.appendChild(body);
+    wrap.appendChild(scroll);
 
-    root.appendChild(grid);
-
-    // 图例
+    // —— 图例：少 → 多
     const legend = document.createElement('div');
-    legend.className = 'heatmap-legend';
-    legend.innerHTML = `
-      <span>少</span>
-      <span class="heatmap-cell heatmap-cell--empty"></span>
-      <span class="heatmap-cell heatmap-cell--l1"></span>
-      <span class="heatmap-cell heatmap-cell--l2"></span>
-      <span class="heatmap-cell heatmap-cell--l3"></span>
-      <span>多</span>
-    `;
-    root.appendChild(legend);
+    legend.className = 'gh-legend';
+    legend.innerHTML =
+      '<span>少</span>' +
+      '<span class="gh-cell gh-cell--0"></span>' +
+      '<span class="gh-cell gh-cell--1"></span>' +
+      '<span class="gh-cell gh-cell--2"></span>' +
+      '<span class="gh-cell gh-cell--3"></span>' +
+      '<span class="gh-cell gh-cell--4"></span>' +
+      '<span>多</span>';
+    wrap.appendChild(legend);
+
+    root.appendChild(wrap);
+
+    // 默认滚动到最右端（最近的日期）
+    requestAnimationFrame(() => { scroll.scrollLeft = scroll.scrollWidth; });
   }
 
   function renderGrowthCurve(last10) {
@@ -1654,7 +1671,7 @@ const App = (function () {
         item.appendChild(imp);
       }
 
-      // 操作区第一行：「📋 文字转写」+「▶ 播放录音」两个等宽按钮（统一字号）
+      // 操作区：「📋 文字转写」「▶ 播放录音」「📊 表达分析」三个按钮同一排等宽
       const actions = document.createElement('div');
       actions.className = 'record-actions';
 
@@ -1698,20 +1715,17 @@ const App = (function () {
         setPlayDisabled('无录音');
       }
 
-      actions.appendChild(tBtn);
-      actions.appendChild(playBtn);
-      item.appendChild(transcriptBody);
-      item.appendChild(actions);
-
-      // 操作区第二行：「📊 表达分析」独立入口
-      const detailRow = document.createElement('div');
-      detailRow.className = 'record-detail-row';
+      // 「📊 表达分析」与前两个按钮同一排
       const detailBtn = document.createElement('a');
       detailBtn.className = 'record-btn record-btn--detail';
       detailBtn.href = 'result.html?id=' + encodeURIComponent(r.id);
       detailBtn.innerHTML = '📊 <span>表达分析</span>';
-      detailRow.appendChild(detailBtn);
-      item.appendChild(detailRow);
+
+      actions.appendChild(tBtn);
+      actions.appendChild(playBtn);
+      actions.appendChild(detailBtn);
+      item.appendChild(transcriptBody);
+      item.appendChild(actions);
 
       list.appendChild(item);
     });

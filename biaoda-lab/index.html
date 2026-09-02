@@ -4,27 +4,23 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>表达研究所</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=20260903" />
 </head>
 <body class="page page--home">
+  <!-- 第一排：产品名 + 连签/累计 + 个人中心入口 -->
   <header class="home-topbar">
-    <div class="brand">
-      <div class="brand-logo" aria-hidden="true">表</div>
-      <span class="brand-name">表达研究所</span>
+    <span class="brand-name">表达研究所</span>
+    <div class="home-stats">
+      <span class="stat-pill" id="dash-streak" title="连续打卡天数">🔥 <b>0</b></span>
+      <span class="stat-pill" id="dash-total" title="累计练习次数">💎 <b>0</b></span>
+      <button type="button" id="profile-entry" class="avatar-entry" aria-label="进入个人中心" title="个人中心">
+        <span class="avatar-initial">我</span>
+      </button>
     </div>
-    <button type="button" id="profile-entry" class="avatar-entry" aria-label="进入个人中心" title="个人中心">
-      <span class="avatar-initial">我</span>
-    </button>
   </header>
 
   <main class="home-main">
-    <!-- 上排：连击 + 累计 -->
-    <div class="home-top-chips">
-      <span class="dash-chip dash-chip--streak" id="dash-streak">🔥 连击 <b>0</b> 天</span>
-      <span class="dash-chip dash-chip--total" id="dash-total">💎 累计 <b>0</b> 次</span>
-    </div>
-
-    <!-- 打卡仪表盘：最近 7 天日历（今日居中，显示日期号） -->
+    <!-- 第二排：打卡日历（最近 7 天，今日居中，只显示日期号） -->
     <section class="home-dash" aria-label="练习打卡">
       <div class="home-cal" id="dash-cal" aria-label="最近 7 天打卡日历"></div>
     </section>
@@ -65,9 +61,9 @@
     </div>
   </main>
 
-  <script src="js/topics.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/topics.js?v=20260903"></script>
+  <script src="js/storage.js?v=20260903"></script>
+  <script src="js/app.js?v=20260903"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () { App.initHome(); });
   </script>
